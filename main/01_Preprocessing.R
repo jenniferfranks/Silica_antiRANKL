@@ -82,8 +82,8 @@ pData(cds)$condition[noncontrol_idx] <- paste(tmp$timepoint, tmp$treatment, sep 
 # QUALITY CONTROL #
 # parameters ---
 PCs_to_use <- 100 
-UMImax <- min(quantile(pData(cds)$n.umi, 0.99), quantile(pData(cds)$n.umi, 0.75)+3*iqr(pData(cds)$n.umi))
-UMImin <- 100 
+#UMImax <- min(quantile(pData(cds)$n.umi, 0.99), quantile(pData(cds)$n.umi, 0.75)+3*iqr(pData(cds)$n.umi))
+UMImin <- 500 
 mitoMax <- 10. 
 cluster.k <- 50 # full dataset
 scrublet.score.max <- 0.2 
@@ -111,7 +111,7 @@ cds <- cds %>%
 
 pData(cds)$cluster <- clusters(cds)
 
-plot_cells(cds, color_cells_by = "cluster", label_cell_groups = FALSE) + 
+plot_cells(cds, color_cells_by = "cluster", label_cell_groups = TRUE, group_label_size=10) + 
   theme_void()
 
 plot_cells(cds, color_cells_by = "sample", label_cell_groups = FALSE) + 
@@ -126,16 +126,17 @@ plot_cells(cds, color_cells_by = "treatment", label_cell_groups = FALSE) +
 plot_cells(cds, color_cells_by = "timepoint", label_cell_groups = FALSE) + 
   theme_void()
 
+plot_cells(cds, color_cells_by = "scrublet_score", label_cell_groups = FALSE) + 
+  theme_void()
+
 table(pData(cds)$treatment, pData(cds)$timepoint)
 
 plot_cells(cds, 
   genes=c("Sftpc", "Siglecf", "Pecam1", "Ptprc", "Cd68", "Col1a1"), 
-  label_cell_groups = FALSE, scale_to_range = F) + 
-  theme_void() + 
-  theme(legend.position = "none")
+  label_cell_groups = FALSE, scale_to_range = FALSE) 
 
 
-cds2 <- cds[,which(pData(cds)$cluster %in% c(2))]
+cds2 <- cds[,which(pData(cds)$cluster %in% c(3,9))]
 cds2 <- cds2 %>% 
   preprocess_cds(num_dim=PCs_to_use) %>% 
   reduce_dimension() %>%
@@ -144,11 +145,21 @@ pData(cds2)$myeloidcluster <- clusters(cds2)
 
 plot_cells(cds2, color_cells_by = "myeloidcluster", label_cell_groups = FALSE, cell_size=1.5) + 
   theme_void() 
+plot_cells(cds2, color_cells_by = "timepoint", label_cell_groups = FALSE, cell_size=1.5) + 
+  theme_void() 
+plot_cells(cds2, color_cells_by = "treatment", label_cell_groups = FALSE, cell_size=1.5) + 
+  theme_void() 
+plot_cells(cds2, color_cells_by = "exposure", label_cell_groups = FALSE, cell_size=1.5) + 
+  theme_void() 
+
 
 plot_cells(cds2, 
-  genes=c("Cd68", "Siglecf", "Adgre4", "Itgam", "Ccr2", "Cd74"), 
-  label_cell_groups = FALSE, scale_to_range = F, cell_size=1.5) + 
-  theme_void()
+  genes=c("Cd68", "Siglecf", "Marco","Adgre4", "Itgam", "Ccr2", "Cd74"), 
+  label_cell_groups = FALSE, scale_to_range = FALSE, cell_size=1.5)
 
 plot_genes_by_group(cds2, markers=c("Cd68", "Siglecf","Marco", "Adgre4", "Itgam", "Ccr2", "Cd74"), 
   group_cells_by="myeloidcluster", ordering_type="maximal_on_diag")
+
+
+table(pData(cds2)$myeloidcluster, pData(cds2)$timepoint)
+table(pData(cds2)$myeloidcluster, pData(cds2)$condition)
